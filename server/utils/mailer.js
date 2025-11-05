@@ -40,7 +40,14 @@ async function sendVerificationCodeEmail({ to, code }) {
 
     const transporter = createTransporter();
     const from = process.env.MAIL_FROM || process.env.SMTP_USER || 'no-reply@example.com';
-    await transporter.sendMail({ from, to, subject, text, html });
+    
+    // Add timeout to fail faster (5 seconds)
+    const sendPromise = transporter.sendMail({ from, to, subject, text, html });
+    const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Email sending timeout after 5 seconds')), 5000)
+    );
+    
+    await Promise.race([sendPromise, timeoutPromise]);
 }
 
 module.exports = { sendVerificationCodeEmail };
