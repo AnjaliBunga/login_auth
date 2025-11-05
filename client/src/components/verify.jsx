@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "../App.css";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+const API_BASE = "https://login-auth-5azr.onrender.com";
 
 export default function VerifyKeyPage() {
   const navigate = useNavigate();
