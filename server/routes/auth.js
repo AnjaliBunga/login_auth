@@ -80,16 +80,25 @@ router.post('/signin', async (req, res) => {
             expiresAt
         });
 
-        // Send email
+        // Try to send email, but don't fail if it doesn't work
+        let emailSent = false;
         try {
             await sendVerificationCodeEmail({ to: user.email, code });
+            emailSent = true;
+            console.log(`✓ Verification code sent to ${user.email}`);
         } catch (mailErr) {
-            console.error('Failed to send verification email:', mailErr?.message || mailErr);
-            await LoginChallenge.deleteOne({ _id: challenge._id });
-            return res.status(502).json({ message: 'Failed to send verification code' });
+            console.error('⚠ Failed to send verification email:', mailErr?.message || mailErr);
+            console.log(`[DEV] Verification code for ${user.email}: ${code} (challengeId: ${challenge._id})`);
+            // Don't delete challenge - allow user to proceed with manual code entry
+            // Check Render logs to get the code during development/testing
         }
 
-        return res.status(200).json({ message: 'Verification code sent', challengeId: challenge._id.toString(), email: user.email });
+        return res.status(200).json({ 
+            message: emailSent ? 'Verification code sent' : 'Verification code generated (check server logs if email not received)', 
+            challengeId: challenge._id.toString(), 
+            email: user.email,
+            emailSent 
+        });
     } catch (err) {
         console.error('Signin error:', err);
         return res.status(500).json({ message: 'Internal server error' });
