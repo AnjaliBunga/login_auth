@@ -14,7 +14,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+const API_BASE = "https://login-auth-5azr.onrender.com";
 
   async function onSubmit(e) {
     e.preventDefault();
