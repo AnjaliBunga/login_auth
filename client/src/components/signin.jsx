@@ -22,16 +22,34 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.message || "Signin failed");
+      
+      let data;
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(`Server returned non-JSON: ${res.status} ${res.statusText}. ${text.substring(0, 100)}`);
       }
-      // Expecting { challengeId }
+      
+      if (!res.ok) {
+        throw new Error(data?.message || `Signin failed: ${res.status}`);
+      }
+      
+      // Expecting { challengeId, email }
       const challengeId = data?.challengeId;
-      if (!challengeId) throw new Error('No challengeId returned');
+      if (!challengeId) {
+        throw new Error('No challengeId returned from server');
+      }
+      
       navigate(`/verify?challengeId=${encodeURIComponent(challengeId)}&email=${encodeURIComponent(email)}`, { replace: true });
     } catch (err) {
-      setError(err.message);
+      console.error('Signin error:', err);
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        setError('Network error: Could not connect to server. Please check your connection.');
+      } else {
+        setError(err.message || 'Failed to sign in. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
