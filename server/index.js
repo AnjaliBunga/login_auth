@@ -9,8 +9,13 @@ const app = express();
 dbconnect();
 
 // Middleware
-app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
+app.use(
+  cors({
+    origin: "https://login-auth-tawny.vercel.app",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);app.use(express.json());
 
 // Health
 app.get('/health', (req, res) => {
