@@ -171,6 +171,17 @@ export default function VerifyKeyPage() {
           {error && <p style={{ color: "#b00020", marginTop: 8 }}>{error}</p>}
         </form>
 
+        <div style={{ marginTop: 12 }}>
+          <button
+            type="button"
+            onClick={() => email && sendCode(email)}
+            className="create-account-btn"
+            style={{ width: "104%", backgroundColor: "#6d28d9" }}
+          >
+            Resend / Show code
+          </button>
+        </div>
+
         <p className="terms" style={{ marginTop: "16px" }}>
           Didn’t get a code? Check spam or try again.
         </p>

@@ -84,7 +84,11 @@ router.post('/signin', async (req, res) => {
     let emailSent = false;
     let showCode = false;
     try {
-      await sendVerificationCodeEmail({ to: user.email, code });
+      const result = await sendVerificationCodeEmail({ to: user.email, code });
+      if (result && result.success === false) {
+        // Non-throwing failure (e.g., connection timeout surfaced as return)
+        throw new Error(result.message || 'Email send failed');
+      }
       emailSent = true;
       console.log(`✓ Verification code sent to ${user.email}`);
     } catch (mailErr) {
@@ -129,7 +133,10 @@ router.post('/send-code', async (req, res) => {
     });
 
     try {
-      await sendVerificationCodeEmail({ to: user.email, code });
+      const result = await sendVerificationCodeEmail({ to: user.email, code });
+      if (result && result.success === false) {
+        throw new Error(result.message || 'Email send failed');
+      }
       console.log(`✓ Verification code sent to ${user.email}`);
       return res.status(200).json({ message: 'Verification code sent' });
     } catch (err) {
