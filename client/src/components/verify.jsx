@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "../App.css";
 
@@ -10,28 +10,58 @@ export default function VerifyKeyPage() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const email = params.get('email') || '';
-  const challengeId = params.get('challengeId') || '';
+  const [fallbackCode, setFallbackCode] = useState(""); // 👈 to show code when email fails
+  const [infoMessage, setInfoMessage] = useState("");
+
+  const email = params.get("email") || "";
+  const challengeId = params.get("challengeId") || "";
 
   const disabled = useMemo(() => !challengeId || code.length < 4, [challengeId, code]);
+
+  // ✅ Automatically request the verification code when page loads
+  useEffect(() => {
+    if (email) sendCode(email);
+  }, [email]);
+
+  async function sendCode(email) {
+    try {
+      setInfoMessage("Sending verification code...");
+      const res = await fetch(`${API_BASE}/api/auth/send-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      if (data.showCode) {
+        // SMTP blocked — show code on page
+        setFallbackCode(data.code);
+        setInfoMessage("SMTP blocked. Showing verification code below 👇");
+      } else {
+        setInfoMessage("Verification code sent to your email ✅");
+      }
+    } catch (err) {
+      setInfoMessage("Failed to send verification code. Try again.");
+    }
+  }
 
   async function onSubmit(e) {
     e.preventDefault();
     setError("");
     if (!challengeId) {
-      setError('Missing challengeId');
+      setError("Missing challengeId");
       return;
     }
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE}/api/auth/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ challengeId, code })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ challengeId, code }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.message || 'Verification failed');
-      navigate('/dashboard', { replace: true });
+      if (!res.ok) throw new Error(data?.message || "Verification failed");
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -82,8 +112,37 @@ export default function VerifyKeyPage() {
         {/* Title */}
         <h2 className="welcome-title">Enter the verification code</h2>
         <p className="welcome-subtitle">
-          {email ? `We sent a code to ${email}` : 'A verification code was sent to your email'}
+          {email
+            ? `We sent a code to ${email}`
+            : "A verification code was sent to your email"}
         </p>
+
+        {infoMessage && (
+          <p style={{ color: "#44087D", marginTop: 8 }}>{infoMessage}</p>
+        )}
+
+        {/* Fallback Code (when email fails) */}
+        {fallbackCode && (
+          <div
+            style={{
+              marginTop: 15,
+              padding: 12,
+              backgroundColor: "#f0e6ff",
+              borderRadius: 8,
+              color: "#44087D",
+              textAlign: "center",
+              fontWeight: 500,
+            }}
+          >
+            <p>Email sending is blocked on this server.</p>
+            <p>
+              Your verification code is:{" "}
+              <span style={{ fontSize: "22px", fontWeight: "bold" }}>
+                {fallbackCode}
+              </span>
+            </p>
+          </div>
+        )}
 
         {/* Form */}
         <form className="signup-form" onSubmit={onSubmit}>
@@ -92,7 +151,7 @@ export default function VerifyKeyPage() {
             type="text"
             placeholder="Enter verification code"
             value={code}
-            onChange={(e)=>setCode(e.target.value)}
+            onChange={(e) => setCode(e.target.value)}
             required
           />
           <button
@@ -101,7 +160,7 @@ export default function VerifyKeyPage() {
             className="create-account-btn"
             disabled={disabled || loading}
           >
-            {loading ? 'Verifying...' : 'Verify'}
+            {loading ? "Verifying..." : "Verify"}
           </button>
           {error && <p style={{ color: "#b00020", marginTop: 8 }}>{error}</p>}
         </form>
