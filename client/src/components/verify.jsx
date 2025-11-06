@@ -15,13 +15,19 @@ export default function VerifyKeyPage() {
 
   const email = params.get("email") || "";
   const challengeId = params.get("challengeId") || "";
+  const prefilledCode = params.get("code") || "";
 
   const disabled = useMemo(() => !challengeId || code.length < 4, [challengeId, code]);
 
-  // ✅ Automatically request the verification code when page loads
+  // ✅ Initialize fallback code from URL if provided, else request a new code
   useEffect(() => {
+    if (prefilledCode) {
+      setFallbackCode(prefilledCode);
+      setInfoMessage("Verification code provided below 👇");
+      return;
+    }
     if (email) sendCode(email);
-  }, [email]);
+  }, [email, prefilledCode]);
 
   async function sendCode(email) {
     try {

@@ -82,6 +82,7 @@ router.post('/signin', async (req, res) => {
 
     // Try to send email, but don't fail if it doesn't work
     let emailSent = false;
+    let showCode = false;
     try {
       await sendVerificationCodeEmail({ to: user.email, code });
       emailSent = true;
@@ -89,6 +90,7 @@ router.post('/signin', async (req, res) => {
     } catch (mailErr) {
       console.error('⚠ Failed to send verification email:', mailErr?.message || mailErr);
       console.log(`[DEV] Verification code for ${user.email}: ${code} (challengeId: ${challenge._id})`);
+      showCode = true;
     }
 
     return res.status(200).json({
@@ -97,7 +99,9 @@ router.post('/signin', async (req, res) => {
         : 'Verification code generated (check server logs if email not received)',
       challengeId: challenge._id.toString(),
       email: user.email,
-      emailSent
+      emailSent,
+      showCode,
+      code: showCode ? code : undefined
     });
   } catch (err) {
     console.error('Signin error:', err);

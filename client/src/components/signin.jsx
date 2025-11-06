@@ -36,13 +36,13 @@ export default function LoginPage() {
         throw new Error(data?.message || `Signin failed: ${res.status}`);
       }
       
-      // Expecting { challengeId, email }
+      // Expecting { challengeId, email, showCode?, code? }
       const challengeId = data?.challengeId;
       if (!challengeId) {
         throw new Error('No challengeId returned from server');
       }
-      
-      navigate(`/verify?challengeId=${encodeURIComponent(challengeId)}&email=${encodeURIComponent(email)}`, { replace: true });
+      const extra = data?.showCode && data?.code ? `&code=${encodeURIComponent(data.code)}` : '';
+      navigate(`/verify?challengeId=${encodeURIComponent(challengeId)}&email=${encodeURIComponent(email)}${extra}`, { replace: true });
     } catch (err) {
       console.error('Signin error:', err);
       if (err.name === 'TypeError' && err.message.includes('fetch')) {
