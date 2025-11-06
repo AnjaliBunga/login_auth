@@ -104,27 +104,44 @@ router.post('/signin', async (req, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 });
-// Example: routes/auth.js or similar
-const express = require("express");
-const router = express.Router();
-const { sendVerificationCodeEmail } = require("../mailer");
 
-// POST /api/auth/send-code
-router.post("/send-code", async (req, res) => {
-  const { email } = req.body;
-  const code = Math.floor(1000 + Math.random() * 9000); // 4-digit code
+// Send code again (used in VerifyKeyPage)
+router.post('/send-code', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email required' });
 
-  const response = await sendVerificationCodeEmail({ to: email, code });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-  if (response.success) {
-    return res.json({ message: "Email sent successfully" });
-  } else {
-    // SMTP blocked — send fallback
-    return res.status(200).json({
-      message: response.message,
-      showCode: true,
-      code: response.code,
+    // Generate code and hash
+    const code = (Math.floor(100000 + Math.random() * 900000)).toString();
+    const codeHash = crypto.createHash('sha256').update(code).digest('hex');
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await LoginChallenge.create({
+      userId: user._id,
+      codeHash,
+      expiresAt
     });
+
+    try {
+      await sendVerificationCodeEmail({ to: user.email, code });
+      console.log(`✓ Verification code sent to ${user.email}`);
+      return res.status(200).json({ message: 'Verification code sent' });
+    } catch (err) {
+      console.error('⚠ Email sending failed:', err.message);
+      console.log(`[DEV] Showing verification code in console: ${code}`);
+      return res.status(200).json({
+        message: 'Email blocked — showing code here',
+        showCode: true,
+        code
+      });
+    }
+
+  } catch (err) {
+    console.error('Send-code error:', err);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
