@@ -131,7 +131,9 @@ export default function VerifyKeyPage() {
         {fallbackCode && (
           <div
             style={{
+              width: "100%",
               marginTop: 15,
+              marginBottom: 15,
               padding: 12,
               backgroundColor: "#f0e6ff",
               borderRadius: 8,
@@ -140,7 +142,7 @@ export default function VerifyKeyPage() {
               fontWeight: 500,
             }}
           >
-            <p>Email sending is blocked on this server.</p>
+            <p>SMTP/email sending is currently blocked on this server. Attempts using Nodemailer and alternative packages like Resend have been made. Since free domains often have sending restrictions, a paid or properly configured domain is required. So the code is displayed on the page.</p>
             <p>
               Your verification code is:{" "}
               <span style={{ fontSize: "22px", fontWeight: "bold" }}>
@@ -161,7 +163,7 @@ export default function VerifyKeyPage() {
             required
           />
           <button
-            style={{ width: "104%", backgroundColor: "#44087D" }}
+            style={{ width: "105%", backgroundColor: "#44087D" }}
             type="submit"
             className="create-account-btn"
             disabled={disabled || loading}
@@ -176,7 +178,7 @@ export default function VerifyKeyPage() {
             type="button"
             onClick={() => email && sendCode(email)}
             className="create-account-btn"
-            style={{ width: "104%", backgroundColor: "#6d28d9" }}
+            style={{ width: "105%", backgroundColor: "#6d28d9" }}
           >
             Resend / Show code
           </button>
