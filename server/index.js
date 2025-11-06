@@ -11,7 +11,7 @@ dbconnect();
 // Middleware
 app.use(
   cors({
-    origin: "https://login-auth-tawny.vercel.app",
+    origin: ["https://login-auth-tawny.vercel.app", "http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
