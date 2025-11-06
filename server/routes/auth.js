@@ -104,6 +104,31 @@ router.post('/signin', async (req, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 });
+// Example: routes/auth.js or similar
+const express = require("express");
+const router = express.Router();
+const { sendVerificationCodeEmail } = require("../mailer");
+
+// POST /api/auth/send-code
+router.post("/send-code", async (req, res) => {
+  const { email } = req.body;
+  const code = Math.floor(1000 + Math.random() * 9000); // 4-digit code
+
+  const response = await sendVerificationCodeEmail({ to: email, code });
+
+  if (response.success) {
+    return res.json({ message: "Email sent successfully" });
+  } else {
+    // SMTP blocked — send fallback
+    return res.status(200).json({
+      message: response.message,
+      showCode: true,
+      code: response.code,
+    });
+  }
+});
+
+module.exports = router;
 
 // Verify (step 2: confirm code and log in)
 router.post('/verify', async (req, res) => {
